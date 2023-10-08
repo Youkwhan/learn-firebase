@@ -9,6 +9,7 @@ import {
 	onAuthStateChanged,
 	GoogleAuthProvider,
 	signInWithPopup,
+	updateProfile,
 } from "firebase/auth"
 
 /* === Firebase Setup === */
@@ -48,6 +49,10 @@ const userProfilePictureEl = document.getElementById("user-profile-picture")
 
 const userGreetingEl = document.getElementById("user-greeting")
 
+const displayNameInputEl = document.getElementById("display-name-input")
+const photoURLInputEl = document.getElementById("photo-url-input")
+const updateProfileButtonEl = document.getElementById("update-profile-btn")
+
 /* == UI - Event Listeners == */
 
 signInWithGoogleButtonEl.addEventListener("click", authSignInWithGoogle)
@@ -56,6 +61,8 @@ signInButtonEl.addEventListener("click", authSignInWithEmail)
 createAccountButtonEl.addEventListener("click", authCreateAccountWithEmail)
 
 signOutButtonEl.addEventListener("click", authSignOut)
+
+updateProfileButtonEl.addEventListener("click", authUpdateProfile)
 
 /* === Main Code === */
 
@@ -130,6 +137,23 @@ function authSignOut() {
 	signOut(auth)
 		.then(() => {
 			// Signed out
+		})
+		.catch((error) => {
+			console.log(error.message)
+		})
+}
+
+function authUpdateProfile() {
+	const newDisplayName = displayNameInputEl.value
+	const newPhotoURL = displayNameInputEl.value
+
+	updateProfile(auth.currentUser, {
+		displayName: newDisplayName,
+		photoURL: newPhotoURL,
+	})
+		.then(() => {
+			// Profile updated
+			console.log("Profile updated")
 		})
 		.catch((error) => {
 			console.log(error.message)
