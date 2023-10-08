@@ -44,6 +44,8 @@ const createAccountButtonEl = document.getElementById("create-account-btn")
 
 const signOutButtonEl = document.getElementById("sign-out-btn")
 
+const userProfilePictureEl = document.getElementById("user-profile-picture")
+
 /* == UI - Event Listeners == */
 
 signInWithGoogleButtonEl.addEventListener("click", authSignInWithGoogle)
@@ -58,8 +60,8 @@ signOutButtonEl.addEventListener("click", authSignOut)
 onAuthStateChanged(auth, (user) => {
 	if (user) {
 		// User is signed in
-		// const uid = user.uid
 		showLoggedInView()
+		showProfilePicture(userProfilePictureEl, user)
 	} else {
 		// User is signed out
 		showLoggedOutView()
@@ -94,7 +96,7 @@ function authSignInWithEmail() {
 	const password = passwordInputEl.value
 
 	signInWithEmailAndPassword(auth, email, password)
-		.then((userCredential) => {
+		.then(() => {
 			// Signed in
 			clearAuthFields()
 		})
@@ -110,7 +112,7 @@ function authCreateAccountWithEmail() {
 	const password = passwordInputEl.value
 
 	createUserWithEmailAndPassword(auth, email, password)
-		.then((userCredential) => {
+		.then(() => {
 			// Signed in
 			// const user = userCredential.user
 			clearAuthFields()
@@ -158,4 +160,23 @@ function clearInputField(field) {
 function clearAuthFields() {
 	clearInputField(emailInputEl)
 	clearInputField(passwordInputEl)
+}
+
+function showProfilePicture(imgElement, user) {
+	if (user !== null) {
+		// The user object has basic properties such as display name, email, etc.
+		const displayName = user.displayName
+		const email = user.email
+		const photoURL = user.photoURL
+		const emailVerified = user.emailVerified
+
+		// The user's ID, unique to the Firebase project. Do NOT use
+		// this value to authenticate with your backend server, if
+		// you have one. Use User.getToken() instead.
+		const uid = user.uid
+
+		imgElement.src = photoURL
+			? photoURL
+			: "assets/images/default-profile-picture.jpeg"
+	}
 }
