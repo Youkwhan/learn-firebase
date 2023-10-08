@@ -6,6 +6,7 @@ import {
 	createUserWithEmailAndPassword,
 	signInWithEmailAndPassword,
 	signOut,
+	onAuthStateChanged,
 } from "firebase/auth"
 
 /* === Firebase Setup === */
@@ -50,7 +51,16 @@ signOutButtonEl.addEventListener("click", authSignOut)
 
 /* === Main Code === */
 
-showLoggedOutView()
+onAuthStateChanged(auth, (user) => {
+	if (user) {
+		// User is signed in
+		// const uid = user.uid
+		showLoggedInView()
+	} else {
+		// User is signed out
+		showLoggedOutView()
+	}
+})
 
 /* === Functions === */
 
@@ -68,7 +78,6 @@ function authSignInWithEmail() {
 		.then((userCredential) => {
 			// Signed in
 			clearAuthFields()
-			showLoggedInView()
 		})
 		.catch((error) => {
 			console.log(error.message)
@@ -86,7 +95,6 @@ function authCreateAccountWithEmail() {
 			// Signed in
 			// const user = userCredential.user
 			clearAuthFields()
-			showLoggedInView()
 		})
 		.catch((error) => {
 			console.error(error.message)
@@ -98,7 +106,6 @@ function authSignOut() {
 	signOut(auth)
 		.then(() => {
 			// Signed out
-			showLoggedOutView()
 		})
 		.catch((error) => {
 			console.log(error.message)
