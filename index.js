@@ -1,19 +1,20 @@
 /* === Imports === */
 // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
+import { initializeApp } from "firebase/app"
+import { getAuth } from "firebase/auth"
 
 /* === Firebase Setup === */
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyC5L6eu7x_n3obLArONJSE74PmXthZP6QI",
-  authDomain: "moody-66db7.firebaseapp.com",
-  projectId: "moody-66db7",
-  storageBucket: "moody-66db7.appspot.com",
-};
+	apiKey: "AIzaSyC5L6eu7x_n3obLArONJSE74PmXthZP6QI",
+	authDomain: "moody-66db7.firebaseapp.com",
+	projectId: "moody-66db7",
+	storageBucket: "moody-66db7.appspot.com",
+}
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-
+const app = initializeApp(firebaseConfig)
+const auth = getAuth(app)
 /* === UI === */
 
 /* == UI - Elements == */
