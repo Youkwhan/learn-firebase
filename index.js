@@ -5,6 +5,7 @@ import {
 	getAuth,
 	createUserWithEmailAndPassword,
 	signInWithEmailAndPassword,
+	signOut,
 } from "firebase/auth"
 
 /* === Firebase Setup === */
@@ -36,12 +37,16 @@ const passwordInputEl = document.getElementById("password-input")
 const signInButtonEl = document.getElementById("sign-in-btn")
 const createAccountButtonEl = document.getElementById("create-account-btn")
 
+const signOutButtonEl = document.getElementById("sign-out-btn")
+
 /* == UI - Event Listeners == */
 
 signInWithGoogleButtonEl.addEventListener("click", authSignInWithGoogle)
 
 signInButtonEl.addEventListener("click", authSignInWithEmail)
 createAccountButtonEl.addEventListener("click", authCreateAccountWithEmail)
+
+signOutButtonEl.addEventListener("click", authSignOut)
 
 /* === Main Code === */
 
@@ -62,6 +67,7 @@ function authSignInWithEmail() {
 	signInWithEmailAndPassword(auth, email, password)
 		.then((userCredential) => {
 			// Signed in
+			clearAuthFields()
 			showLoggedInView()
 		})
 		.catch((error) => {
@@ -79,6 +85,7 @@ function authCreateAccountWithEmail() {
 		.then((userCredential) => {
 			// Signed in
 			// const user = userCredential.user
+			clearAuthFields()
 			showLoggedInView()
 		})
 		.catch((error) => {
@@ -87,22 +94,42 @@ function authCreateAccountWithEmail() {
 	console.log("Sign up with email and password")
 }
 
+function authSignOut() {
+	signOut(auth)
+		.then(() => {
+			// Signed out
+			showLoggedOutView()
+		})
+		.catch((error) => {
+			console.log(error.message)
+		})
+}
+
 /* == Functions - UI Functions == */
 
 function showLoggedOutView() {
-	hideElement(viewLoggedIn)
-	showElement(viewLoggedOut)
+	hideView(viewLoggedIn)
+	showView(viewLoggedOut)
 }
 
 function showLoggedInView() {
-	hideElement(viewLoggedOut)
-	showElement(viewLoggedIn)
+	hideView(viewLoggedOut)
+	showView(viewLoggedIn)
 }
 
-function showElement(element) {
-	element.style.display = "flex"
+function showView(view) {
+	view.style.display = "flex"
 }
 
-function hideElement(element) {
-	element.style.display = "none"
+function hideView(view) {
+	view.style.display = "none"
+}
+
+function clearInputField(field) {
+	field.value = ""
+}
+
+function clearAuthFields() {
+	clearInputField(emailInputEl)
+	clearInputField(passwordInputEl)
 }
