@@ -1,7 +1,11 @@
 /* === Imports === */
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app"
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth"
+import {
+	getAuth,
+	createUserWithEmailAndPassword,
+	signInWithEmailAndPassword,
+} from "firebase/auth"
 
 /* === Firebase Setup === */
 // Your web app's Firebase configuration
@@ -52,6 +56,18 @@ function authSignInWithGoogle() {
 }
 
 function authSignInWithEmail() {
+	const email = emailInputEl.value
+	const password = passwordInputEl.value
+
+	signInWithEmailAndPassword(auth, email, password)
+		.then((userCredential) => {
+			// Signed in
+			showLoggedInView()
+		})
+		.catch((error) => {
+			console.log(error.message)
+		})
+
 	console.log("Sign in with email and password")
 }
 
