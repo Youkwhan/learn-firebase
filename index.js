@@ -7,6 +7,8 @@ import {
 	signInWithEmailAndPassword,
 	signOut,
 	onAuthStateChanged,
+	GoogleAuthProvider,
+	signInWithPopup,
 } from "firebase/auth"
 
 /* === Firebase Setup === */
@@ -21,6 +23,8 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig)
 const auth = getAuth(app)
+const provider = new GoogleAuthProvider()
+
 /* === UI === */
 
 /* == UI - Elements == */
@@ -67,7 +71,22 @@ onAuthStateChanged(auth, (user) => {
 /* = Functions - Firebase - Authentication = */
 
 function authSignInWithGoogle() {
-	console.log("Sign in with Google")
+	signInWithPopup(auth, provider)
+		.then((result) => {
+			// This gives you a Google Access Token. You can use it to access the Google API.
+			const credential = GoogleAuthProvider.credentialFromResult(result)
+			const token = credential.accessToken
+			// The signed-in user info.
+			const user = result.user
+
+			console.log("Sign in with Google")
+		})
+		.catch((error) => {
+			// Handle Errors here.
+			const errorCode = error.code
+			const errorMessage = error.message
+			console.log(errorMessage)
+		})
 }
 
 function authSignInWithEmail() {
