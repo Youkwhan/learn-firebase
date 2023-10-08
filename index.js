@@ -46,6 +46,8 @@ const signOutButtonEl = document.getElementById("sign-out-btn")
 
 const userProfilePictureEl = document.getElementById("user-profile-picture")
 
+const userGreetingEl = document.getElementById("user-greeting")
+
 /* == UI - Event Listeners == */
 
 signInWithGoogleButtonEl.addEventListener("click", authSignInWithGoogle)
@@ -62,6 +64,7 @@ onAuthStateChanged(auth, (user) => {
 		// User is signed in
 		showLoggedInView()
 		showProfilePicture(userProfilePictureEl, user)
+		showUserGreeting(userGreetingEl, user)
 	} else {
 		// User is signed out
 		showLoggedOutView()
@@ -179,4 +182,12 @@ function showProfilePicture(imgElement, user) {
 			? photoURL
 			: "assets/images/default-profile-picture.jpeg"
 	}
+}
+
+function showUserGreeting(element, user) {
+	const displayName = user.displayName
+
+	element.textContent = displayName
+		? `Hey ${displayName.split(" ")[0]}, how are you?`
+		: "Hey, friend, how are you?"
 }
