@@ -11,6 +11,7 @@ import {
 	signInWithPopup,
 	updateProfile,
 } from "firebase/auth"
+import { getFirestore } from "firebase/firestore"
 
 /* === Firebase Setup === */
 // Your web app's Firebase configuration
@@ -23,8 +24,11 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig)
+
 const auth = getAuth(app)
 const provider = new GoogleAuthProvider()
+
+const db = getFirestore(app)
 
 /* === UI === */
 
