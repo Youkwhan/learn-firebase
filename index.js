@@ -50,12 +50,10 @@ const createAccountButtonEl = document.getElementById("create-account-btn")
 const signOutButtonEl = document.getElementById("sign-out-btn")
 
 const userProfilePictureEl = document.getElementById("user-profile-picture")
-
 const userGreetingEl = document.getElementById("user-greeting")
 
-const displayNameInputEl = document.getElementById("display-name-input")
-const photoURLInputEl = document.getElementById("photo-url-input")
-const updateProfileButtonEl = document.getElementById("update-profile-btn")
+const textareaEl = document.getElementById("post-input")
+const postButtonEl = document.getElementById("post-btn")
 
 /* == UI - Event Listeners == */
 
@@ -66,7 +64,7 @@ createAccountButtonEl.addEventListener("click", authCreateAccountWithEmail)
 
 signOutButtonEl.addEventListener("click", authSignOut)
 
-updateProfileButtonEl.addEventListener("click", authUpdateProfile)
+postButtonEl.addEventListener("click", postButtonPressed)
 
 /* === Main Code === */
 
@@ -147,24 +145,37 @@ function authSignOut() {
 		})
 }
 
-function authUpdateProfile() {
-	const newDisplayName = displayNameInputEl.value
-	const newPhotoURL = displayNameInputEl.value
+/* = Functions - Firebase - Cloud Firestore = */
 
-	updateProfile(auth.currentUser, {
-		displayName: newDisplayName,
-		photoURL: newPhotoURL,
-	})
-		.then(() => {
-			// Profile updated
-			console.log("Profile updated")
-		})
-		.catch((error) => {
-			console.log(error.message)
-		})
+async function addPostToDB(postBody) {
+	/*  Challenge:
+	Import collection and addDoc from 'firebase/firestore'
+
+			Use the code from the documentaion to make this function work.
+			
+			The function should add a new document to the "posts" collection in Firestore.
+			
+			The document should contain a field called 'body' of type "string" with a value of
+			postBody (from function parameter)
+			
+			If the document was written successfully, then console log
+			"Document written with ID: {documentID}"
+			Where documentID is the actual ID of the newly created document.
+			
+			If something went wrong, then you should log the error message using console.error
+	*/
 }
 
 /* == Functions - UI Functions == */
+
+function postButtonPressed() {
+	const postBody = textareaEl.value
+	
+	if (postBody) {
+			// addPostToDB(postBody)
+			clearInputField(textareaEl)
+	}
+}
 
 function showLoggedOutView() {
 	hideView(viewLoggedIn)
