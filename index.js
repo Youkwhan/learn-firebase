@@ -11,7 +11,7 @@ import {
 	signInWithPopup,
 	updateProfile,
 } from "firebase/auth"
-import { getFirestore, addDoc, collection } from "firebase/firestore"
+import { getFirestore, addDoc, collection, setDoc, doc } from "firebase/firestore"
 
 /* === Firebase Setup === */
 // Your web app's Firebase configuration
@@ -148,13 +148,20 @@ function authSignOut() {
 /* = Functions - Firebase - Cloud Firestore = */
 
 async function addPostToDB(postBody) {
+	// try {
+	// 	const docRef = await addDoc(collection(db, "posts"), {
+	// 		body: postBody,
+	// 	})
+	// 	console.log("Document written with ID: ", docRef.id)
+	// } catch (error) {
+	// 	console.log("Error adding document: ", error.message)
+	// }
 	try {
-		const docRef = await addDoc(collection(db, "posts"), {
+		await setDoc(doc(db, "posts", "post01"), {
 			body: postBody,
 		})
-		console.log("Document written with ID: ", docRef.id)
 	} catch (error) {
-		console.log("Error adding document: ", error.message)
+		console.error(error.message)
 	}
 }
 
