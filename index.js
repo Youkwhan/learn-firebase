@@ -11,7 +11,7 @@ import {
 	signInWithPopup,
 	updateProfile,
 } from "firebase/auth"
-import { getFirestore } from "firebase/firestore"
+import { getFirestore, addDoc, collection } from "firebase/firestore"
 
 /* === Firebase Setup === */
 // Your web app's Firebase configuration
@@ -148,32 +148,24 @@ function authSignOut() {
 /* = Functions - Firebase - Cloud Firestore = */
 
 async function addPostToDB(postBody) {
-	/*  Challenge:
-	Import collection and addDoc from 'firebase/firestore'
-
-			Use the code from the documentaion to make this function work.
-			
-			The function should add a new document to the "posts" collection in Firestore.
-			
-			The document should contain a field called 'body' of type "string" with a value of
-			postBody (from function parameter)
-			
-			If the document was written successfully, then console log
-			"Document written with ID: {documentID}"
-			Where documentID is the actual ID of the newly created document.
-			
-			If something went wrong, then you should log the error message using console.error
-	*/
+	try {
+		const docRef = await addDoc(collection(db, "posts"), {
+			body: postBody,
+		})
+		console.log("Document written with ID: ", docRef.id)
+	} catch (error) {
+		console.log("Error adding document: ", error.message)
+	}
 }
 
 /* == Functions - UI Functions == */
 
 function postButtonPressed() {
 	const postBody = textareaEl.value
-	
+
 	if (postBody) {
-			// addPostToDB(postBody)
-			clearInputField(textareaEl)
+		addPostToDB(postBody)
+		clearInputField(textareaEl)
 	}
 }
 
