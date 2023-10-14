@@ -17,6 +17,7 @@ import {
 	collection,
 	setDoc,
 	doc,
+	serverTimestamp,
 } from "firebase/firestore"
 
 /* === Firebase Setup === */
@@ -158,12 +159,13 @@ async function addPostToDB(postBody, user) {
 		const docRef = await addDoc(collection(db, "posts"), {
 			body: postBody,
 			uid: user.uid,
+			createdAt: serverTimestamp(),
 		})
 		console.log("Document written with ID: ", docRef.id)
 	} catch (error) {
 		console.log("Error adding document: ", error.message)
 	}
-	
+
 	// try {
 	// 	await setDoc(doc(db, "posts", "post01"), {
 	// 		body: postBody,
