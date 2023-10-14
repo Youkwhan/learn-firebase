@@ -11,7 +11,13 @@ import {
 	signInWithPopup,
 	updateProfile,
 } from "firebase/auth"
-import { getFirestore, addDoc, collection, setDoc, doc } from "firebase/firestore"
+import {
+	getFirestore,
+	addDoc,
+	collection,
+	setDoc,
+	doc,
+} from "firebase/firestore"
 
 /* === Firebase Setup === */
 // Your web app's Firebase configuration
@@ -147,31 +153,34 @@ function authSignOut() {
 
 /* = Functions - Firebase - Cloud Firestore = */
 
-async function addPostToDB(postBody) {
+async function addPostToDB(postBody, user) {
+	try {
+		const docRef = await addDoc(collection(db, "posts"), {
+			body: postBody,
+			uid: user.uid,
+		})
+		console.log("Document written with ID: ", docRef.id)
+	} catch (error) {
+		console.log("Error adding document: ", error.message)
+	}
+	
 	// try {
-	// 	const docRef = await addDoc(collection(db, "posts"), {
+	// 	await setDoc(doc(db, "posts", "post01"), {
 	// 		body: postBody,
 	// 	})
-	// 	console.log("Document written with ID: ", docRef.id)
 	// } catch (error) {
-	// 	console.log("Error adding document: ", error.message)
+	// 	console.error(error.message)
 	// }
-	try {
-		await setDoc(doc(db, "posts", "post01"), {
-			body: postBody,
-		})
-	} catch (error) {
-		console.error(error.message)
-	}
 }
 
 /* == Functions - UI Functions == */
 
 function postButtonPressed() {
 	const postBody = textareaEl.value
+	const user = auth.currentUser
 
 	if (postBody) {
-		addPostToDB(postBody)
+		addPostToDB(postBody, user)
 		clearInputField(textareaEl)
 	}
 }
