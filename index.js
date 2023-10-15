@@ -18,6 +18,7 @@ import {
 	setDoc,
 	doc,
 	serverTimestamp,
+	getDocs,
 } from "firebase/firestore"
 
 /* === Firebase Setup === */
@@ -64,6 +65,9 @@ const postButtonEl = document.getElementById("post-btn")
 
 const moodEmojiEls = document.getElementsByClassName("mood-emoji-btn")
 
+const fetchPostsButtonEl = document.getElementById("fetch-posts-btn")
+const postsEl = document.getElementById("posts")
+
 /* == UI - Event Listeners == */
 
 signInWithGoogleButtonEl.addEventListener("click", authSignInWithGoogle)
@@ -74,6 +78,8 @@ createAccountButtonEl.addEventListener("click", authCreateAccountWithEmail)
 signOutButtonEl.addEventListener("click", authSignOut)
 
 postButtonEl.addEventListener("click", postButtonPressed)
+
+fetchPostsButtonEl.addEventListener("click", fetchOnceAndRenderPostsFromDB)
 
 for (let moodEmojiEl of moodEmojiEls) {
 	moodEmojiEl.addEventListener("click", selectMood)
@@ -185,7 +191,66 @@ async function addPostToDB(postBody, user) {
 	// }
 }
 
+function displayDate(firebaseDate) {
+	const date = firebaseDate.toDate()
+
+	const day = date.getDate()
+	const year = date.getFullYear()
+
+	const monthNames = [
+		"Jan",
+		"Feb",
+		"Mar",
+		"Apr",
+		"May",
+		"Jun",
+		"Jul",
+		"Aug",
+		"Sep",
+		"Oct",
+		"Nov",
+		"Dec",
+	]
+	const month = monthNames[date.getMonth()]
+
+	let hours = date.getHours()
+	let minutes = date.getMinutes()
+	hours = hours < 10 ? "0" + hours : hours
+	minutes = minutes < 10 ? "0" + minutes : minutes
+
+	return `${day} ${month} ${year} - ${hours}:${minutes}`
+}
+
+async function fetchOnceAndRenderPostsFromDB() {
+	try {
+		const querySnapshot = await getDocs(collection(db, "posts"))
+
+		clearAll(postsEl)
+
+		querySnapshot.forEach((doc) => {
+			// console.log(`${doc.id} : ${doc.data().body}`)
+			renderPost(postsEl, doc.data())
+		})
+	} catch (error) {
+		console.log(error.message)
+	}
+}
+
 /* == Functions - UI Functions == */
+
+function renderPost(postsEl, postData) {
+	postsEl.innerHTML += `
+			<div class="post">
+					<div class="header">
+							<h3>${displayDate(postData.createdAt)}</h3>
+							<img src="assets/emojis/${postData.mood}.png">
+					</div>
+					<p>
+							${postData.body}
+					</p>
+			</div>
+	`
+}
 
 function postButtonPressed() {
 	const postBody = textareaEl.value
@@ -196,6 +261,10 @@ function postButtonPressed() {
 		clearInputField(textareaEl)
 		resetAllMoodElements(moodEmojiEls)
 	}
+}
+
+function clearAll(element) {
+	element.innerHTML = ""
 }
 
 function showLoggedOutView() {
