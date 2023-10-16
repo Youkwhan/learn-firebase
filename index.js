@@ -9,16 +9,13 @@ import {
 	onAuthStateChanged,
 	GoogleAuthProvider,
 	signInWithPopup,
-	updateProfile,
 } from "firebase/auth"
 import {
 	getFirestore,
-	addDoc,
 	collection,
-	setDoc,
-	doc,
+	addDoc,
 	serverTimestamp,
-	getDocs,
+	onSnapshot,
 } from "firebase/firestore"
 
 /* === Firebase Setup === */
@@ -77,16 +74,14 @@ createAccountButtonEl.addEventListener("click", authCreateAccountWithEmail)
 
 signOutButtonEl.addEventListener("click", authSignOut)
 
-postButtonEl.addEventListener("click", postButtonPressed)
-
-fetchPostsButtonEl.addEventListener("click", fetchOnceAndRenderPostsFromDB)
-
 for (let moodEmojiEl of moodEmojiEls) {
 	moodEmojiEl.addEventListener("click", selectMood)
 }
 
-/* Global State */
+/* === Global Constants === */
 let moodState = 0
+
+const collectionName = "posts"
 
 /* === Main Code === */
 
@@ -96,6 +91,7 @@ onAuthStateChanged(auth, (user) => {
 		showLoggedInView()
 		showProfilePicture(userProfilePictureEl, user)
 		showUserGreeting(userGreetingEl, user)
+		fetchInRealtimeAndRenderPostsFromDB()
 	} else {
 		// User is signed out
 		showLoggedOutView()
@@ -121,7 +117,7 @@ function authSignInWithGoogle() {
 			// Handle Errors here.
 			const errorCode = error.code
 			const errorMessage = error.message
-			console.log(errorMessage)
+			console.error(errorMessage)
 		})
 }
 
@@ -130,15 +126,12 @@ function authSignInWithEmail() {
 	const password = passwordInputEl.value
 
 	signInWithEmailAndPassword(auth, email, password)
-		.then(() => {
-			// Signed in
+		.then((userCredential) => {
 			clearAuthFields()
 		})
 		.catch((error) => {
-			console.log(error.message)
+			console.error(error.message)
 		})
-
-	console.log("Sign in with email and password")
 }
 
 function authCreateAccountWithEmail() {
@@ -146,24 +139,19 @@ function authCreateAccountWithEmail() {
 	const password = passwordInputEl.value
 
 	createUserWithEmailAndPassword(auth, email, password)
-		.then(() => {
-			// Signed in
-			// const user = userCredential.user
+		.then((userCredential) => {
 			clearAuthFields()
 		})
 		.catch((error) => {
 			console.error(error.message)
 		})
-	console.log("Sign up with email and password")
 }
 
 function authSignOut() {
 	signOut(auth)
-		.then(() => {
-			// Signed out
-		})
+		.then(() => {})
 		.catch((error) => {
-			console.log(error.message)
+			console.error(error.message)
 		})
 }
 
@@ -171,7 +159,7 @@ function authSignOut() {
 
 async function addPostToDB(postBody, user) {
 	try {
-		const docRef = await addDoc(collection(db, "posts"), {
+		const docRef = await addDoc(collection(db, collectionName), {
 			body: postBody,
 			uid: user.uid,
 			createdAt: serverTimestamp(),
@@ -179,7 +167,7 @@ async function addPostToDB(postBody, user) {
 		})
 		console.log("Document written with ID: ", docRef.id)
 	} catch (error) {
-		console.log("Error adding document: ", error.message)
+		console.error("Error adding document: ", error.message)
 	}
 
 	// try {
@@ -191,70 +179,34 @@ async function addPostToDB(postBody, user) {
 	// }
 }
 
-function displayDate(firebaseDate) {
-	const date = firebaseDate.toDate()
-
-	const day = date.getDate()
-	const year = date.getFullYear()
-
-	const monthNames = [
-		"Jan",
-		"Feb",
-		"Mar",
-		"Apr",
-		"May",
-		"Jun",
-		"Jul",
-		"Aug",
-		"Sep",
-		"Oct",
-		"Nov",
-		"Dec",
-	]
-	const month = monthNames[date.getMonth()]
-
-	let hours = date.getHours()
-	let minutes = date.getMinutes()
-	hours = hours < 10 ? "0" + hours : hours
-	minutes = minutes < 10 ? "0" + minutes : minutes
-
-	return `${day} ${month} ${year} - ${hours}:${minutes}`
-}
-
-async function fetchOnceAndRenderPostsFromDB() {
-	try {
-		const querySnapshot = await getDocs(collection(db, "posts"))
-
+function fetchInRealtimeAndRenderPostsFromDB() {
+	onSnapshot(collection(db, collectionName), (querySnapshot) => {
 		clearAll(postsEl)
 
 		querySnapshot.forEach((doc) => {
-			// console.log(`${doc.id} : ${doc.data().body}`)
 			renderPost(postsEl, doc.data())
 		})
-	} catch (error) {
-		console.log(error.message)
-	}
+	})
 }
 
 /* == Functions - UI Functions == */
 
 function renderPost(postsEl, postData) {
 	postsEl.innerHTML += `
-			<div class="post">
-					<div class="header">
-							<h3>${displayDate(postData.createdAt)}</h3>
-							<img src="assets/emojis/${postData.mood}.png">
-					</div>
-					<p>
-							${replaceNewlinesWithBrTags(postData.body)}
-					</p>
-			</div>
-	`
+        <div class="post">
+            <div class="header">
+                <h3>${displayDate(postData.createdAt)}</h3>
+                <img src="assets/emojis/${postData.mood}.png">
+            </div>
+            <p>
+                ${replaceNewlinesWithBrTags(postData.body)}
+            </p>
+        </div>
+    `
 }
 
 function replaceNewlinesWithBrTags(inputString) {
-	// Challenge: Use the replace method on inputString to replace newlines with break tags and return the result
-	inputString.replace(/\n/g, "<br>")
+	return inputString.replace(/\n/g, "<br>")
 }
 
 function postButtonPressed() {
@@ -300,31 +252,63 @@ function clearAuthFields() {
 }
 
 function showProfilePicture(imgElement, user) {
-	if (user !== null) {
-		// The user object has basic properties such as display name, email, etc.
-		const displayName = user.displayName
-		const email = user.email
-		const photoURL = user.photoURL
-		const emailVerified = user.emailVerified
+	// The user object has basic properties such as display name, email, etc.
+	const photoURL = user.photoURL
 
-		// The user's ID, unique to the Firebase project. Do NOT use
-		// this value to authenticate with your backend server, if
-		// you have one. Use User.getToken() instead.
-		const uid = user.uid
-
+	if (photoURL) {
 		imgElement.src = photoURL
-			? photoURL
-			: "assets/images/default-profile-picture.jpeg"
+	} else {
+		imgElement.src = "assets/images/default-profile-picture.jpeg"
 	}
 }
 
 function showUserGreeting(element, user) {
 	const displayName = user.displayName
 
-	element.textContent = displayName
-		? `Hey ${displayName.split(" ")[0]}, how are you?`
-		: "Hey, friend, how are you?"
+	if (displayName) {
+		const userFirstName = displayName.split(" ")[0]
+
+		element.textContent = `Hey ${userFirstName}, how are you?`
+	} else {
+		element.textContent = `Hey friend, how are you?`
+	}
 }
+
+function displayDate(firebaseDate) {
+	if (!firebaseDate) {
+		return "Date processing"
+	}
+
+	const date = firebaseDate.toDate()
+
+	const day = date.getDate()
+	const year = date.getFullYear()
+
+	const monthNames = [
+		"Jan",
+		"Feb",
+		"Mar",
+		"Apr",
+		"May",
+		"Jun",
+		"Jul",
+		"Aug",
+		"Sep",
+		"Oct",
+		"Nov",
+		"Dec",
+	]
+	const month = monthNames[date.getMonth()]
+
+	let hours = date.getHours()
+	let minutes = date.getMinutes()
+	hours = hours < 10 ? "0" + hours : hours
+	minutes = minutes < 10 ? "0" + minutes : minutes
+
+	return `${day} ${month} ${year} - ${hours}:${minutes}`
+}
+
+/* = Functions - UI Functions - Mood = */
 
 function selectMood(event) {
 	const selectedMoodEmojiElementId = event.currentTarget.id
