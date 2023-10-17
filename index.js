@@ -62,10 +62,8 @@ const userGreetingEl = document.getElementById("user-greeting")
 
 const textareaEl = document.getElementById("post-input")
 const postButtonEl = document.getElementById("post-btn")
-
 const moodEmojiEls = document.getElementsByClassName("mood-emoji-btn")
 
-const fetchPostsButtonEl = document.getElementById("fetch-posts-btn")
 const postsEl = document.getElementById("posts")
 
 /* == UI - Event Listeners == */
@@ -80,6 +78,8 @@ signOutButtonEl.addEventListener("click", authSignOut)
 for (let moodEmojiEl of moodEmojiEls) {
 	moodEmojiEl.addEventListener("click", selectMood)
 }
+
+postButtonEl.addEventListener("click", postButtonPressed)
 
 /* === Global Constants === */
 let moodState = 0
