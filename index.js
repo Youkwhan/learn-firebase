@@ -1,5 +1,4 @@
 /* === Imports === */
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app"
 import {
 	getAuth,
@@ -60,9 +59,13 @@ const signOutButtonEl = document.getElementById("sign-out-btn")
 const userProfilePictureEl = document.getElementById("user-profile-picture")
 const userGreetingEl = document.getElementById("user-greeting")
 
+const moodEmojiEls = document.getElementsByClassName("mood-emoji-btn")
 const textareaEl = document.getElementById("post-input")
 const postButtonEl = document.getElementById("post-btn")
-const moodEmojiEls = document.getElementsByClassName("mood-emoji-btn")
+
+const allFilterButtonEl = document.getElementById("all-filter-btn")
+
+const filterButtonEls = document.getElementsByClassName("filter-btn")
 
 const postsEl = document.getElementById("posts")
 
@@ -79,10 +82,17 @@ for (let moodEmojiEl of moodEmojiEls) {
 	moodEmojiEl.addEventListener("click", selectMood)
 }
 
+for (let filterButtonEl of filterButtonEls) {
+	filterButtonEl.addEventListener("click", selectFilter)
+}
+
 postButtonEl.addEventListener("click", postButtonPressed)
 
-/* === Global Constants === */
+/* === State === */
+
 let moodState = 0
+
+/* === Global Constants === */
 
 const collectionName = "posts"
 
@@ -94,7 +104,8 @@ onAuthStateChanged(auth, (user) => {
 		showLoggedInView()
 		showProfilePicture(userProfilePictureEl, user)
 		showUserGreeting(userGreetingEl, user)
-		fetchInRealtimeAndRenderPostsFromDB(user)
+		updateFilterButtonStyle(allFilterButtonEl)
+		fetchAllPosts(user)
 	} else {
 		// User is signed out
 		showLoggedOutView()
@@ -108,19 +119,10 @@ onAuthStateChanged(auth, (user) => {
 function authSignInWithGoogle() {
 	signInWithPopup(auth, provider)
 		.then((result) => {
-			// This gives you a Google Access Token. You can use it to access the Google API.
-			const credential = GoogleAuthProvider.credentialFromResult(result)
-			const token = credential.accessToken
-			// The signed-in user info.
-			const user = result.user
-
-			console.log("Sign in with Google")
+			console.log("Signed in with Google")
 		})
 		.catch((error) => {
-			// Handle Errors here.
-			const errorCode = error.code
-			const errorMessage = error.message
-			console.error(errorMessage)
+			console.error(error.message)
 		})
 }
 
@@ -170,33 +172,98 @@ async function addPostToDB(postBody, user) {
 		})
 		console.log("Document written with ID: ", docRef.id)
 	} catch (error) {
-		console.error("Error adding document: ", error.message)
+		console.error(error.message)
 	}
-
-	// try {
-	// 	await setDoc(doc(db, "posts", "post01"), {
-	// 		body: postBody,
-	// 	})
-	// } catch (error) {
-	// 	console.error(error.message)
-	// }
 }
 
-function fetchInRealtimeAndRenderPostsFromDB(user) {
-	const postsRef = collection(db, collectionName)
-	const q = query(
-		postsRef,
-		where("uid", "==", user.uid),
-		orderBy("createdAt", "desc")
-	)
-
-	onSnapshot(q, (querySnapshot) => {
+function fetchInRealtimeAndRenderPostsFromDB(query, user) {
+	onSnapshot(query, (querySnapshot) => {
 		clearAll(postsEl)
 
 		querySnapshot.forEach((doc) => {
 			renderPost(postsEl, doc.data())
 		})
 	})
+}
+
+function fetchTodayPosts(user) {
+	const startOfDay = new Date()
+	startOfDay.setHours(0, 0, 0, 0)
+
+	const endOfDay = new Date()
+	endOfDay.setHours(23, 59, 59, 999)
+
+	const postsRef = collection(db, collectionName)
+
+	const q = query(
+		postsRef,
+		where("uid", "==", user.uid),
+		where("createdAt", ">=", startOfDay),
+		where("createdAt", "<=", endOfDay),
+		orderBy("createdAt", "desc")
+	)
+
+	fetchInRealtimeAndRenderPostsFromDB(q, user)
+}
+
+function fetchWeekPosts(user) {
+	const startOfWeek = new Date()
+	startOfWeek.setHours(0, 0, 0, 0)
+
+	if (startOfWeek.getDay() === 0) {
+		// If today is Sunday
+		startOfWeek.setDate(startOfWeek.getDate() - 6) // Go to previous Monday
+	} else {
+		startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1)
+	}
+
+	const endOfDay = new Date()
+	endOfDay.setHours(23, 59, 59, 999)
+
+	const postsRef = collection(db, collectionName)
+
+	const q = query(
+		postsRef,
+		where("uid", "==", user.uid),
+		where("createdAt", ">=", startOfWeek),
+		where("createdAt", "<=", endOfDay),
+		orderBy("createdAt", "desc")
+	)
+
+	fetchInRealtimeAndRenderPostsFromDB(q, user)
+}
+
+function fetchMonthPosts(user) {
+	const startOfMonth = new Date()
+	startOfMonth.setHours(0, 0, 0, 0)
+	startOfMonth.setDate(1)
+
+	const endOfDay = new Date()
+	endOfDay.setHours(23, 59, 59, 999)
+
+	const postsRef = collection(db, collectionName)
+
+	const q = query(
+		postsRef,
+		where("uid", "==", user.uid),
+		where("createdAt", ">=", startOfMonth),
+		where("createdAt", "<=", endOfDay),
+		orderBy("createdAt", "desc")
+	)
+
+	fetchInRealtimeAndRenderPostsFromDB(q, user)
+}
+
+function fetchAllPosts(user) {
+	const postsRef = collection(db, collectionName)
+
+	const q = query(
+		postsRef,
+		where("uid", "==", user.uid),
+		orderBy("createdAt", "desc")
+	)
+
+	fetchInRealtimeAndRenderPostsFromDB(q, user)
 }
 
 /* == Functions - UI Functions == */
@@ -262,7 +329,6 @@ function clearAuthFields() {
 }
 
 function showProfilePicture(imgElement, user) {
-	// The user object has basic properties such as display name, email, etc.
 	const photoURL = user.photoURL
 
 	if (photoURL) {
@@ -358,4 +424,44 @@ function resetAllMoodElements(allMoodElements) {
 
 function returnMoodValueFromElementId(elementId) {
 	return Number(elementId.slice(5))
+}
+
+/* == Functions - UI Functions - Date Filters == */
+
+function resetAllFilterButtons(allFilterButtons) {
+	for (let filterButtonEl of allFilterButtons) {
+		filterButtonEl.classList.remove("selected-filter")
+	}
+}
+
+function updateFilterButtonStyle(element) {
+	element.classList.add("selected-filter")
+}
+
+function fetchPostsFromPeriod(period, user) {
+	if (period === "today") {
+		fetchTodayPosts(user)
+	} else if (period === "week") {
+		fetchWeekPosts(user)
+	} else if (period === "month") {
+		fetchMonthPosts(user)
+	} else {
+		fetchAllPosts(user)
+	}
+}
+
+function selectFilter(event) {
+	const user = auth.currentUser
+
+	const selectedFilterElementId = event.target.id
+
+	const selectedFilterPeriod = selectedFilterElementId.split("-")[0]
+
+	const selectedFilterElement = document.getElementById(selectedFilterElementId)
+
+	resetAllFilterButtons(filterButtonEls)
+
+	updateFilterButtonStyle(selectedFilterElement)
+
+	fetchPostsFromPeriod(selectedFilterPeriod, user)
 }
