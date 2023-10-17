@@ -18,6 +18,7 @@ import {
 	onSnapshot,
 	query,
 	where,
+	orderBy,
 } from "firebase/firestore"
 
 /* === Firebase Setup === */
@@ -183,7 +184,11 @@ async function addPostToDB(postBody, user) {
 
 function fetchInRealtimeAndRenderPostsFromDB(user) {
 	const postsRef = collection(db, collectionName)
-	const q = query(postsRef, where("uid", "==", user.uid))
+	const q = query(
+		postsRef,
+		where("uid", "==", user.uid),
+		orderBy("createdAt", "desc")
+	)
 
 	onSnapshot(q, (querySnapshot) => {
 		clearAll(postsEl)
