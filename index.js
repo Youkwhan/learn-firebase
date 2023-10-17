@@ -16,6 +16,8 @@ import {
 	addDoc,
 	serverTimestamp,
 	onSnapshot,
+	query,
+	where,
 } from "firebase/firestore"
 
 /* === Firebase Setup === */
@@ -91,7 +93,7 @@ onAuthStateChanged(auth, (user) => {
 		showLoggedInView()
 		showProfilePicture(userProfilePictureEl, user)
 		showUserGreeting(userGreetingEl, user)
-		fetchInRealtimeAndRenderPostsFromDB()
+		fetchInRealtimeAndRenderPostsFromDB(user)
 	} else {
 		// User is signed out
 		showLoggedOutView()
@@ -179,8 +181,11 @@ async function addPostToDB(postBody, user) {
 	// }
 }
 
-function fetchInRealtimeAndRenderPostsFromDB() {
-	onSnapshot(collection(db, collectionName), (querySnapshot) => {
+function fetchInRealtimeAndRenderPostsFromDB(user) {
+	const postsRef = collection(db, collectionName)
+	const q = query(postsRef, where("uid", "==", user.uid))
+
+	onSnapshot(q, (querySnapshot) => {
 		clearAll(postsEl)
 
 		querySnapshot.forEach((doc) => {
